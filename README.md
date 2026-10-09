@@ -41,7 +41,7 @@
 
 - [`source/*.xml`](source/) — 未签名的 plist 源文件（可直接编辑与审阅）
 - [`source/gen_study.py`](source/gen_study.py) — Python 生成器（面向 Minis/iOS 环境，桌面运行需调整输出路径）
-- [`signing/sign.yml`](signing/sign.yml) — GitHub Actions 工作流：改动源码后手动触发，自动经 HubSign 签名并把结果提交回 `shortcuts/`
+- [`.github/workflows/sign.yml`](.github/workflows/sign.yml) — GitHub Actions 工作流：改动源码后，在仓库 Actions 页手动触发（Run workflow），自动经 HubSign 签名并把结果提交回 `shortcuts/`
 
 ## ⚠️ 注意事项
 
