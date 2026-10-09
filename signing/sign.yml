@@ -1,0 +1,44 @@
+# Signs every source/*.xml via the HubSign signing server (used with permission
+# of the project maintainer for open-source distribution), then commits the
+# signed .shortcut files back into shortcuts/.
+#
+# Trigger: Actions tab -> "Sign Shortcuts (HubSign)" -> Run workflow
+#
+# Note: use curl's default User-Agent. The signing endpoint serves API clients
+# normally but redirects browser-like clients to the marketing site.
+name: Sign Shortcuts (HubSign)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sign sources
+        run: |
+          mkdir -p shortcuts
+          for f in source/*.xml; do
+            name=$(basename "$f" .xml)
+            case "$name" in
+              study-recorder) dname="学习记录";;
+              study-weekly)   dname="学习周报";;
+              *)              dname="$name";;
+            esac
+            echo "signing $name ($dname)"
+            curl -sS -m 120 -o "shortcuts/$name.shortcut" \
+              -F "shortcutName=$dname" \
+              -F "shortcut=@$f;type=application/xml" \
+              https://hubsign.routinehub.services/sign
+          done
+      - name: Verify and commit
+        run: |
+          for f in shortcuts/*.shortcut; do
+            if head -c 4 "$f" | grep -qa AEA1; then echo "OK $f"; else echo "BAD $f"; exit 1; fi
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add shortcuts
+          git commit -m "Re-sign shortcuts" || echo "no changes"
+          git push
